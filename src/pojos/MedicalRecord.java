@@ -1,7 +1,7 @@
 package pojos;
 
-import data.ACC;
-import data.EMG;
+import signals.ACC;
+import signals.EMG;
 
 import java.util.ArrayList;
 import java.util.List;

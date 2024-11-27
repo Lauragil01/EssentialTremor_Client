@@ -1,11 +1,11 @@
-package data;
+package signals;
 
-public class Data {
+public class Signals {
 
     private ACC acc;
     private EMG emg;
 
-    public Data(ACC acc, EMG emg) {
+    public Signals(ACC acc, EMG emg) {
         this.acc = acc;
         this.emg = emg;
     }

@@ -1,8 +1,8 @@
 package bITalino;
 
 
-import data.ACC;
-import data.EMG;
+import signals.ACC;
+import signals.EMG;
 
 import java.util.Vector;
 

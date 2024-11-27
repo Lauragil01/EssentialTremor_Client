@@ -187,7 +187,7 @@ RFC 2795       The Infinite Monkey Protocol Suite (IMPS)    1 April 2000
     |-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+--|
     |         Source        |      Destination         |
     |-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+--|
-    |           data                        | Padding  |
+    |           signals                        | Padding  |
     |-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+--|
 
    The Version, Sequence Number, Protocol Number, and Reserved fields
@@ -201,7 +201,7 @@ RFC 2795       The Infinite Monkey Protocol Suite (IMPS)    1 April 2000
    are communicating.  They are represented using Infinite TAGs (see
    next section).
 
-   The data section contains data which is of arbitrary length.
+   The signals section contains signals which is of arbitrary length.
 
    The Size field records the size of the entire packet using Infinite
    TAG encoding.
@@ -320,7 +320,7 @@ RFC 2795       The Infinite Monkey Protocol Suite (IMPS)    1 April 2000
 
    KEEPER is a connectionless protocol.  The ZOO sends a request to the
    SIMIAN using a single IMPS packet.  The SIMIAN sends a response back
-   to the ZOO with another IMPS packet.  The data portion of the packet
+   to the ZOO with another IMPS packet.  The signals portion of the packet
    is of the following form:
 
 

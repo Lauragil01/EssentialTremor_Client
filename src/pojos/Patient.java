@@ -4,9 +4,9 @@ import bITalino.BITalino;
 import bITalino.BITalinoException;
 import bITalino.BitalinoDemo;
 import bITalino.Frame;
-import data.ACC;
-import data.Data;
-import data.EMG;
+import signals.ACC;
+import signals.Signals;
+import signals.EMG;
 
 import javax.bluetooth.RemoteDevice;
 import java.io.*;
@@ -98,15 +98,15 @@ public class Patient {
         record.setPatientName(this.name);
         record.setPatientSurname(this.surname);
         record.setGenetic_background(this.genetic_background);
-        Data data = obtainData();
-        record.setAcceleration(data.getAcc());
-        record.setEmg(data.getEmg());
+        Signals signals = obtainSignals();
+        record.setAcceleration(signals.getAcc());
+        record.setEmg(signals.getEmg());
         this.getMedicalRecords().add(record);
     }
 
-    private Data obtainData(){
+    private Signals obtainSignals(){
         Frame[] frame;
-        Data data = null;
+        Signals signals = null;
         BITalino bitalino = null;
         try {
             bitalino = new BITalino();
@@ -167,7 +167,7 @@ public class Patient {
             /*System.out.println(emg.getTimestamp());
             System.out.println(emg.getSignalData());
             System.out.println(acc.getSignalData());*/
-            data = new Data(acc, emg);
+            signals = new Signals(acc, emg);
             saveDataToFile(this.getName(), acc, emg); //save info in a txt file
 
         } catch (BITalinoException ex) {
@@ -184,7 +184,7 @@ public class Patient {
                 Logger.getLogger(BitalinoDemo.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        return data;
+        return signals;
     }
 
     private void saveDataToFile(String patientName, ACC acc, EMG emg) {
@@ -330,10 +330,12 @@ public class Patient {
             Logger.getLogger(Doctor.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    private void seeDoctorsNotes() {
-        //TODO here the patient chooses what record they want to see
 
+    private void seeDoctorNotes(){
+        //TODO the patient chooses what record they want to see
     }
+
+
     /*public static void main(String[] args) throws IOException {
         Patient p = new Patient("a", "a", Boolean.TRUE);
         p.openRecord();
