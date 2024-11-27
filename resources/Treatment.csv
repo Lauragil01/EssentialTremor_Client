@@ -1,0 +1,4 @@
+id,name,description
+1,SURGERY,The patient needs surgery.
+2,PROPRANOLOL,"The patient needs pharmacology treatment, exactly Propranolol."
+3,PRIMIDONE,"The patient needs pharmacology treatment, exactly Primidone."
