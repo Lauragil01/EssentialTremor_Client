@@ -89,11 +89,11 @@ public class Patient {
     public String toString() {
         return "- Name: " + name + '\'' +
                 "- Surname: " + surname + '\'';
-                //"- State: " + state +
-                //"- Treatment: " + treatment;
+        //"- State: " + state +
+        //"- Treatment: " + treatment;
     }
 
-    private void openRecord(){
+    private void openRecord() {
         MedicalRecord record = askData();
         record.setPatientName(this.name);
         record.setPatientSurname(this.surname);
@@ -104,7 +104,7 @@ public class Patient {
         this.getMedicalRecords().add(record);
     }
 
-    private Signals obtainSignals(){
+    private Signals obtainSignals() {
         Frame[] frame;
         Signals signals = null;
         BITalino bitalino = null;
@@ -136,7 +136,7 @@ public class Patient {
             for (int j = 0; j < 100; j++) {
 
                 //Each time read a block of 10 samples
-                int block_size=10;
+                int block_size = 10;
                 frame = bitalino.read(block_size);
 
                 System.out.println("size block: " + frame.length);
@@ -187,10 +187,11 @@ public class Patient {
         return signals;
     }
 
+    //TODO: should we save age, weight and height
     private void saveDataToFile(String patientName, ACC acc, EMG emg) {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime moment = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
-        String timestamp = now.format(formatter);
+        String timestamp = moment.format(formatter);
 
         Path folderPath = Paths.get("BITalinoData");
         try {
@@ -202,7 +203,7 @@ public class Patient {
         String fileName = "BITalinoData/" + patientName + "_" + timestamp + ".txt";
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileName))) {
             writer.write("Patient Name: " + patientName + "\n");
-            writer.write("Date and Time: " + now + "\n\n");
+            writer.write("Date and Time: " + moment + "\n\n");
 
             writer.write("EMG Data:\n");
             for (int i = 0; i < emg.getSignalData().size(); i++) {
@@ -238,11 +239,43 @@ public class Patient {
         return new MedicalRecord(age, weight, height, symptoms);
     }
 
-    private MedicalRecord chooseMR(){ //TODO choose
-        MedicalRecord mr = this.getMedicalRecords().get(0);
-        return mr;
+    //choosing Medical Record
+    private MedicalRecord chooseMR() {
+        if (this.medicalRecords.isEmpty()) {
+            System.out.println("No medical records available.");
+            return null;
+        }
+
+        Scanner sc = new Scanner(System.in);
+        System.out.println("Available Medical Records:");
+
+        // Display medical records with indices
+        for (int i = 0; i < medicalRecords.size(); i++) {
+            System.out.println((i + 1) + ": " + medicalRecords.get(i)); // using toString of MedicalRecord class
+        }
+
+        System.out.print("Enter the number of the medical record you want to choose: ");
+        int choice;
+        while (true) {
+            try {
+                choice = sc.nextInt();
+                if (choice > 0 && choice <= medicalRecords.size()) {
+                    break;
+                } else {
+                    System.out.println("Invalid choice. Please enter a number between 1 and " + medicalRecords.size());
+                }
+            } catch (InputMismatchException e) {
+                System.out.println("Invalid input. Please enter a numeric value.");
+                sc.next(); // Clear the invalid input
+            }
+        }
+
+        // Return the selected medical record
+        return medicalRecords.get(choice);
     }
-    public void sendMedicalRecord(MedicalRecord medicalRecord, Socket socket) throws IOException {
+
+
+    /*public void sendMedicalRecord(MedicalRecord medicalRecord, Socket socket) throws IOException {
         //TODO send info, CHECK
         PrintWriter printWriter = new PrintWriter(socket.getOutputStream(), true);
         System.out.println("Connection established... sending text");
@@ -265,19 +298,48 @@ public class Patient {
         printWriter.println(emg);
         printWriter.println(medicalRecord.getGenetic_background());//boolean
         //releaseSendingResources(printWriter, socket);
+    }*/
+
+    public void sendMedicalRecord(MedicalRecord medicalRecord, Socket socket) throws IOException {
+        PrintWriter printWriter = new PrintWriter(socket.getOutputStream(), true);
+
+        // Collection of fields into a list
+        List<String> fields = new ArrayList<>();
+        fields.add(medicalRecord.getPatientName());
+        fields.add(medicalRecord.getPatientSurname());
+        fields.add(String.valueOf(medicalRecord.getAge()));
+        fields.add(String.valueOf(medicalRecord.getWeight()));
+        fields.add(String.valueOf(medicalRecord.getHeight()));
+
+        // Add symptoms
+        fields.add(joinWithCommas(medicalRecord.getSymptoms()));
+
+        // Add signal data
+        fields.add(joinIntegersWithCommas(medicalRecord.getAcceleration().getTimestamp()));
+        fields.add(joinIntegersWithCommas(medicalRecord.getAcceleration().getSignalData()));
+        fields.add(joinIntegersWithCommas(medicalRecord.getEmg().getSignalData()));
+
+        // Add genetic background
+        fields.add(String.valueOf(medicalRecord.getGenetic_background()));
+
+        // Serializing and sending the record
+        String recordString = joinWithCommas(fields);
+        printWriter.println(recordString);
+
+        System.out.println("Medical record sent successfully: " + recordString);
     }
+
 
     public static String joinWithCommas(List<String> list) {
         return String.join(",", list);
     }
 
     public static String joinIntegersWithCommas(List<Integer> list) {
-        return list.stream()
-                .map(String::valueOf) // Convert Integer to String
-                .collect(Collectors.joining(","));
+        return list.stream().map(String::valueOf) // Convert Integer to String
+                .collect(Collectors.joining(",")); // commas
     }
 
-    private DoctorsNote receiveDoctorsNote()throws IOException {
+    private DoctorsNote receiveDoctorsNote() throws IOException {
         //TODO check this one
         DoctorsNote doctorsNote = null;
         try (ServerSocket serverSocket = new ServerSocket(9009)) {  // Puerto 9009 para coincidir con el cliente
@@ -310,6 +372,7 @@ public class Patient {
         }
         return doctorsNote;
     }
+
     private static void releaseReceivingResources(BufferedReader bufferedReader,
                                                   Socket socket, ServerSocket socketServidor) {
         try {
@@ -331,7 +394,7 @@ public class Patient {
         }
     }
 
-    private void seeDoctorNotes(){
+    private void seeDoctorNotes() {
         //TODO the patient chooses what record they want to see
     }
 
@@ -345,4 +408,55 @@ public class Patient {
         MedicalRecord mr = p.chooseMR();
         p.sendMedicalRecord(mr);
     }*/
+
+
+    public static void main(String[] args) {
+        // Start a mock server in a new thread
+        new Thread(() -> startMockServer()).start();
+
+        // Delay waiting to the Server
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        // Test the sendMedicalRecord method
+        try (Socket socket = new Socket("localhost", 9000)) {
+            // Create  MedicalRecord data
+            MedicalRecord record = new MedicalRecord(
+                    "Ana", "Losada", 23, 60, 170,
+                    Arrays.asList("Tremor", "Fatigue"),
+                    new ACC(Arrays.asList(1, 2, 3), Arrays.asList(10, 20, 30)),
+                    new EMG(Arrays.asList(4, 5, 6), Arrays.asList(10, 20, 30)),
+                    true
+            );
+
+            //Patient instance and test the method
+            Patient patient = new Patient("Ana", "Losada", true);
+            patient.sendMedicalRecord(record, socket);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Mock server to test the function
+    private static void startMockServer() {
+        try (ServerSocket serverSocket = new ServerSocket(9000)) {
+            System.out.println("Mock server started, waiting for connection...");
+            try (Socket clientSocket = serverSocket.accept();
+                 BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
+
+                System.out.println("Client connected. Receiving data...");
+                String receivedData;
+                while ((receivedData = reader.readLine()) != null) {
+                    System.out.println("Received: " + receivedData);
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+
+        }
+    }
 }
