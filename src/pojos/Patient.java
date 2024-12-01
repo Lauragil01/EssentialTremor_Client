@@ -187,7 +187,7 @@ public class Patient {
         return signals;
     }
 
-    //TODO: should we save age, weight and height
+    //TODO: should we save age, weight and height?
     private void saveDataToFile(String patientName, ACC acc, EMG emg) {
         LocalDateTime moment = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
@@ -250,14 +250,14 @@ public class Patient {
         System.out.println("Available Medical Records:");
 
         // Display medical records with indices
-        for (int i = 0; i < medicalRecords.size(); i++) {
-            System.out.println((i + 1) + ": " + medicalRecords.get(i)); // using toString of MedicalRecord class
+        for (int i = 0; i < this.medicalRecords.size(); i++) {
+            System.out.println((i + 1) + ": " + this.medicalRecords.get(i)); // using toString of MedicalRecord class
         }
 
-        System.out.print("Enter the number of the medical record you want to choose: ");
         int choice;
         while (true) {
             try {
+                System.out.print("Enter the number of the medical record you want to choose: ");
                 choice = sc.nextInt();
                 if (choice > 0 && choice <= medicalRecords.size()) {
                     break;
@@ -269,14 +269,14 @@ public class Patient {
                 sc.next(); // Clear the invalid input
             }
         }
-
+        sc.close();
         // Return the selected medical record
-        return medicalRecords.get(choice);
+        return medicalRecords.get(choice-1);
     }
 
 
     /*public void sendMedicalRecord(MedicalRecord medicalRecord, Socket socket) throws IOException {
-        //TODO send info, CHECK
+
         PrintWriter printWriter = new PrintWriter(socket.getOutputStream(), true);
         System.out.println("Connection established... sending text");
         printWriter.println(medicalRecord.getPatientName());
@@ -339,18 +339,18 @@ public class Patient {
                 .collect(Collectors.joining(",")); // commas
     }
 
-    private DoctorsNote receiveDoctorsNote() throws IOException {
+    private DoctorsNote receiveDoctorsNote(MedicalRecord medicalRecord) throws IOException {
         //TODO check this one
         DoctorsNote doctorsNote = null;
         try (ServerSocket serverSocket = new ServerSocket(9009)) {  // Puerto 9009 para coincidir con el cliente
-            System.out.println("Server started, waiting for client...");
+            System.out.println("Server started, waiting for client, waiting for the Doctor Notes...");
 
             try (Socket socket = serverSocket.accept();
                  BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
 
-                System.out.println("Client connected. Receiving data...");
+                System.out.println("Client connected. Receiving doctor's note...");
 
-                // Read each line
+                // Read/ print each line doctor's data
                 String doctorName = bufferedReader.readLine();
                 System.out.println(doctorName);
                 String doctorSurname = bufferedReader.readLine();
@@ -361,10 +361,10 @@ public class Patient {
                 releaseReceivingResources(bufferedReader, socket, serverSocket);
 
                 doctorsNote = new DoctorsNote(doctorName, doctorSurname, notes);
-                //TODO meter esto en lista doctor
+                medicalRecord.getDoctorsNotes().add(doctorsNote);
                 //TODO this is in the main
                 //DoctorsNote doctorsNote = createDoctorsNote(medicalRecord);
-                //medicalRecord.getDoctorsNotes().add(doctorsNote);
+
                 return doctorsNote;
             }
         } catch (Exception e) {
@@ -394,8 +394,17 @@ public class Patient {
         }
     }
 
-    private void seeDoctorNotes() {
-        //TODO the patient chooses what record they want to see
+    private void seeDoctorNotes(MedicalRecord medicalRecord) {
+        List<DoctorsNote> notes=medicalRecord.getDoctorsNotes();
+
+        if(notes.isEmpty()){
+            System.out.println("There is not doctor notes available for this Medical Record.");
+            return;
+        }
+        System.out.println("Doctor notes in this medical record");
+        for(int i=0; i<notes.size();i++){
+            System.out.println((i + 1)+ ": "+notes.get(i).getNotes());
+        }
     }
 
 
