@@ -105,6 +105,10 @@ public class MedicalRecord {
         return emg;
     }
 
+    public MedicalRecord()
+    {
+
+    }
     public MedicalRecord(int age, double weight, int height, List<String> symptoms) {
         this.age = age;
         this.weight = weight;

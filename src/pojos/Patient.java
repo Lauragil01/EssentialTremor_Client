@@ -94,7 +94,7 @@ public class Patient {
     }
 
     private void openMedicalRecord() {
-        MedicalRecord record = askData();
+        MedicalRecord record=askData();
         record.setPatientName(this.name);
         record.setPatientSurname(this.surname);
         record.setGenetic_background(this.genetic_background);
@@ -102,6 +102,26 @@ public class Patient {
         record.setAcceleration(signals.getAcc());
         record.setEmg(signals.getEmg());
         this.getMedicalRecords().add(record);
+    }
+
+    //Data that the patient fills when creating medicalRecord
+    private MedicalRecord askData() {
+
+        Scanner sc = new Scanner(System.in);
+        System.out.println("- Age: ");
+        int age = sc.nextInt();
+        System.out.println("- Weight (kg): ");
+        double weight = sc.nextDouble();
+        System.out.println("- Height (cm): ");
+        int height = sc.nextInt();
+        System.out.println("- Symptoms (enter symptoms separated by commas): ");
+        String symptomsInput = sc.nextLine();
+
+        //Takes the symptoms input and creates a List
+        List<String> symptoms = Arrays.asList(symptomsInput.split(","));
+        symptoms = symptoms.stream().map(String::trim).collect(Collectors.toList()); // Trim extra spaces
+        sc.close();
+        return new MedicalRecord(age, weight, height, symptoms);
     }
 
     private Signals obtainSignals() {
@@ -221,25 +241,6 @@ public class Patient {
         }
     }
 
-    //Data that the patient fills when creating medicalRecord
-    private MedicalRecord askData() {
-
-            Scanner sc = new Scanner(System.in);
-            System.out.println("- Age: ");
-            int age = sc.nextInt();
-            System.out.println("- Weight (kg): ");
-            double weight = sc.nextDouble();
-            System.out.println("- Height (cm): ");
-            int height = sc.nextInt();
-            System.out.println("- Symptoms (enter symptoms separated by commas): ");
-            String symptomsInput = sc.nextLine();
-
-            //Takes the symptoms input and creates a List
-            List<String> symptoms = Arrays.asList(symptomsInput.split(","));
-            symptoms = symptoms.stream().map(String::trim).collect(Collectors.toList()); // Trim extra spaces
-            sc.close();
-            return new MedicalRecord(age, weight, height, symptoms);
-    }
 
     //choosing Medical Record
     private MedicalRecord chooseMR() {
@@ -276,6 +277,7 @@ public class Patient {
         return medicalRecords.get(choice-1);
     }
 
+    //TODO: CHECK info MR sent to server
     public void sendMedicalRecord(MedicalRecord medicalRecord, Socket socket) throws IOException {
             PrintWriter printWriter = new PrintWriter(socket.getOutputStream(), true);
 
@@ -349,6 +351,22 @@ public class Patient {
         return doctorsNote;
     }
 
+
+    //patient chooses what record to see
+    private void seeDoctorNotes(MedicalRecord medicalRecord) {
+
+        List<DoctorsNote> notes=medicalRecord.getDoctorsNotes();
+
+        if(notes.isEmpty()){
+            System.out.println("There is not doctor notes available for this Medical Record.");
+            return;
+        }
+        System.out.println("Doctor notes in this medical record");
+        for(int i=0; i<notes.size();i++){
+            System.out.println((i + 1)+ ": "+notes.get(i).getNotes());
+        }
+    }
+
     private static void releaseReceivingResources(BufferedReader bufferedReader,
                                                   Socket socket, ServerSocket socketServidor) {
         try {
@@ -370,21 +388,8 @@ public class Patient {
         }
     }
 
-    private void seeDoctorNotes(MedicalRecord medicalRecord) {
 
-        List<DoctorsNote> notes=medicalRecord.getDoctorsNotes();
-
-        if(notes.isEmpty()){
-            System.out.println("There is not doctor notes available for this Medical Record.");
-            return;
-        }
-        System.out.println("Doctor notes in this medical record");
-        for(int i=0; i<notes.size();i++){
-            System.out.println((i + 1)+ ": "+notes.get(i).getNotes());
-        }
-    }
-
-
+//-----------------------TESTS-----------------------------
     /*public static void main(String[] args) throws IOException {
         Patient p = new Patient("a", "a", Boolean.TRUE);
         p.openRecord();
@@ -396,7 +401,7 @@ public class Patient {
     }*/
 
 
-    public static void main(String[] args) {
+   /* public static void main(String[] args) {
         // Start a mock server in a new thread
         new Thread(() -> startMockServer()).start();
 
@@ -444,5 +449,5 @@ public class Patient {
             e.printStackTrace();
 
         }
-    }
+    }*/
 }

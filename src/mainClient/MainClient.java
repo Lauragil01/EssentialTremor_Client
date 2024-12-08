@@ -1,13 +1,17 @@
 package mainClient;
 
+import pojos.MedicalRecord;
 import pojos.Patient;
 
 import java.io.*;
 import java.net.Socket;
+import java.util.Arrays;
 import java.util.InputMismatchException;
+import java.util.List;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 public class MainClient {
     private static Scanner sc = new Scanner(System.in);
@@ -16,8 +20,8 @@ public class MainClient {
     private static BufferedReader bufferedReader;
     private static InputStream inputStream;
     private static Patient patient;
-    private static boolean control;
-    private static int option;
+    private static boolean control=true;
+
 
     public static void main(String[] args) {
         try {
@@ -25,81 +29,112 @@ public class MainClient {
             printWriter = new PrintWriter(socket.getOutputStream(), true);
             bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             inputStream = socket.getInputStream();
-            boolean connection = true;
 
-            /*if (!login()) {
-                System.out.println("Login failed. Exiting.");
-                return;
-            }*/
+            while (control) {
+                showMainMenu();
+                try {
+                    int option = sc.nextInt();
+                    sc.nextLine(); //clean buffer after reading
+                    optionMainMenu(option);
+                } catch (InputMismatchException e) {
+                    System.out.println("Invalid input. Please enter a number.");
+                    sc.next();
+                }
+            }
+        } catch (IOException ex) {
+            System.out.println("Error connecting ti the server");
+            ex.printStackTrace();
+        } finally {
+            releaseResourcesClient(inputStream,socket);
+        }
+    }
+    private static void showMainMenu(){
+        System.out.println("\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+        System.out.println("@@                                                                  @@");
+        System.out.println("@@                 Welcome.                                         @@");
+        System.out.println("@@                 1. Register as user                              @@");
+        System.out.println("@@                 2. Log in                                        @@");
+        System.out.println("@@                 0. Exit                                          @@");
+        System.out.println("@@                                                                  @@");
+        System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+        System.out.print("\nSelect an option: ");
+    }
 
-            //registerPatient();
+    private static void optionMainMenu(int option) {
+        switch (option) {
+            case 1:
+                try {
+                    registerPatient();
+                } catch (IOException e) {
+                    System.out.println("Error during registration: " + e.getMessage());
+                }
+                break;
+            case 2:
+                boolean loggedIn = loginPatient();
+                if (loggedIn) {
+                    showLoggedInMenu();
+                }else{
+                    System.out.println("Returning to main menu");
+                }
+                break;
+            case 0:
+                System.out.println("Exiting...");
+                control = false;
+                break;
+            default:
+                System.out.println("Invalid option. Please try again.");
+                break;
+        }
+    }
+
+    private static void showLoggedInMenu() {
+        boolean loggedInControl = true;
+        while (loggedInControl) {
+            System.out.println("\n================= Logged In Menu =================");
+            System.out.println("1. Open Medical Record");
+            System.out.println("2. Send Medical Record");
+            System.out.println("0. Log Out");
+            System.out.println("==================================================");
+            System.out.print("Select an option: ");
 
             try {
-                control = true;
-                while (control) {
-                    System.out.println("\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-                    System.out.println("@@                                                                  @@");
-                    System.out.println("@@                 Welcome.                                         @@");
-                    System.out.println("@@                 1. Register as user                              @@");
-                    System.out.println("@@                 2. Log in                                        @@");
-                    System.out.println("@@                 0. Exit                                          @@");
-                    System.out.println("@@                                                                  @@");
-                    System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-                    System.out.print("\nSelect an option: ");
-
-                    try {
-                        option = sc.nextInt();
-                        sc.nextLine(); //clean buffer after reading
-                    } catch (InputMismatchException e) {
-                        System.out.println("Invalid input. Please enter a number.");
-                        sc.next();
-                        continue;
-                    }
-                    switch (option) {
-                        case 1:
-                            registerPatient();
-                            break;
-                        case 2:
-                            loginPatient();
-                            break;
-                        case 0:
-                            System.out.println("Exiting...");
-                            //connection = false;
-                            control = false;
-                            break;
-                        default:
-                            System.out.println("  NOT AN OPTION \n");
-                            break;
-                    }
+                int loggedInOption = sc.nextInt();
+                sc.nextLine(); // Limpiar el buffer
+                switch (loggedInOption) {
+                    case 1:
+                        openMedicalRecord();
+                        break;
+                    case 2:
+                        sendMedicalRecord();
+                        break;
+                    case 0:
+                        System.out.println("Logging out...");
+                        loggedInControl = false;
+                        break;
+                    default:
+                        System.out.println("Invalid option. Please try again.");
+                        break;
                 }
-
-            } catch (NumberFormatException e) {
-                System.out.println("  NOT A NUMBER. Closing application... \n");
-                sc.close();
+            } catch (InputMismatchException e) {
+                System.out.println("Invalid input. Please enter a number.");
+                sc.next(); // clean input incorrect
             }
-
-        } catch (IOException e) {
-            System.out.println("Error connecting to the server.");
-            e.printStackTrace();
-        } finally {
-            releaseResourcesClient(inputStream, socket);
         }
-
     }
 
     private static void releaseResourcesClient(InputStream inputStream, Socket socket) {
-        try {
-            inputStream.close();
-        } catch (IOException ex) {
-            Logger.getLogger(MainClient.class.getName()).log(Level.SEVERE, null, ex);
-        }
+            try {
+                inputStream.close();
+            } catch (IOException ex) {
+                Logger.getLogger(MainClient.class.getName()).log(Level.SEVERE, "Error closing input stream", ex);
+            }
 
-        try {
-            socket.close();
-        } catch (IOException ex) {
-            Logger.getLogger(MainClient.class.getName()).log(Level.SEVERE, null, ex);
+            try {
+                socket.close();
+            } catch (IOException ex) {
+                Logger.getLogger(MainClient.class.getName()).log(Level.SEVERE, "Error closing socket", ex);
+            }
         }
-    }
 
     //TODO revisar este con el del server
     public static boolean loginPatient()  {
@@ -116,15 +151,12 @@ public class MainClient {
             String responseServer = bufferedReader.readLine();
             System.out.println("received response");
 
-            if ("LOGIN_SUCCESS".equals(responseServer)) {
-                System.out.println("Login successful.");
+            if ("SUCCESS".equals(responseServer)) {
+                System.out.println("Login successful. Welcome"+username);
                 return true;
-            } else if ("ERROR".equals(responseServer)){
-                System.out.println("Login failed.");
+            } else{
+                System.out.println("Login failed."+ responseServer);
                 return false;
-            }else{
-            System.out.println("Unexpected response from server");
-            return false;
             }
         }catch(IOException e){
             System.out.println("Error during login "+ e.getMessage());
@@ -133,7 +165,7 @@ public class MainClient {
     }
 
 //TODO: podemos usar metodo .trim() para eliminar espacios y comparar bien las cadenas
-    //TODO: gestionar excepciones COMPLETAR
+    //TODO: revisar excepciones
     public static void registerPatient() throws IOException {
         System.out.println("Please enter your user credentials for registration:");
         System.out.print("Username: ");
@@ -147,13 +179,12 @@ public class MainClient {
         System.out.print("\nSurname: ");
         String surname = sc.nextLine();
 
-        boolean geneticBackground=false;
+        boolean geneticBackground;
 
         while (true) {
             System.out.print("\nGenetic Background (true/false): ");
-            String input=sc.nextLine();
             try {
-                geneticBackground = Boolean.parseBoolean(input);
+                geneticBackground = Boolean.parseBoolean(sc.nextLine());
                 break;
             } catch (Exception e) {
                 System.out.println("Invalid input. Please enter 'true' or 'false'.");
@@ -165,10 +196,11 @@ public class MainClient {
         //response of the server:
         String response = bufferedReader.readLine();
         System.out.println("Patient data sent to the server for registration.");
-        if (response != null) {
-            System.out.println("Server response: " + response);
+
+        if ("SUCCESS".equals(response)) {
+            System.out.println("Registration successful. You can now log in.");
         } else {
-            System.out.println("No response received from server.");
+            System.out.println("Registration failed: " + response);
         }
     }
 
@@ -176,11 +208,55 @@ public class MainClient {
         // TODO
         System.out.println("Opening medical record...");
     }
-
     private static void sendMedicalRecord() {
-        // TODO
-        System.out.println("Sending medical record...");
-        //patient.sendMedicalRecord(medicalRecord, socket);
+            System.out.println("Sending Medical Record");
+        try {
+            System.out.println("\n=== Creating Medical Record ===");
+            MedicalRecord medicalRecord = createMedicalRecord();
+
+            if (medicalRecord != null) {
+                patient.sendMedicalRecord(medicalRecord, socket);
+                System.out.println("Medical record sent successfully.");
+            } else {
+                System.out.println("Failed to create medical record.");
+            }
+        } catch (IOException e) {
+            System.out.println("Error sending medical record: " + e.getMessage());
+        }
     }
+
+
+    //TODO : REVISAR!!!! con openMedicalRecord() in Patient class
+    private static MedicalRecord createMedicalRecord() {
+        try {
+            System.out.println("- Enter Age: ");
+            int age = sc.nextInt();
+            System.out.println("- Enter Weight (kg): ");
+            double weight = sc.nextDouble();
+            System.out.println("- Enter Height (cm): ");
+            int height = sc.nextInt();
+            sc.nextLine(); // Limpiar buffer
+            System.out.println("- Enter Symptoms (comma-separated): ");
+            String symptomsInput = sc.nextLine();
+
+            // Process symptoms input into a list
+            List<String> symptoms = Arrays.asList(symptomsInput.split(","));
+            symptoms = symptoms.stream().map(String::trim).collect(Collectors.toList());
+
+            System.out.println("- Collecting physiological signals...");
+            List<Integer> emgSignal = patient.obtainSignals("EMG");
+            List<Integer> accSignal = patient.obtainSignals("ACC");
+
+            // Create MedicalRecord
+            MedicalRecord medicalRecord = new MedicalRecord(age, weight, height, symptoms, accSignal, emgSignal);
+            System.out.println("Medical record created successfully.");
+            return medicalRecord;
+        } catch (InputMismatchException e) {
+            System.out.println("Invalid input. Please try again.");
+            sc.next(); // Limpiar entrada inválida
+            return null;
+        }
+    }
+
 }
 
