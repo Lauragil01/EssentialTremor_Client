@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 
 public class Doctor {
 
-    private User user;
+    //private User user;
     private String name;
     private String surname;
     private List<Patient> patients;
@@ -249,7 +249,6 @@ public class Doctor {
             }
         }
         Patient patient = new Patient(name,surname,genBack);
-        patient.getDoctors().add(this);
         this.getPatients().add(patient);
         sc.close();
     }

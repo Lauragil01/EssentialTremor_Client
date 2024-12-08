@@ -26,9 +26,9 @@ public class Patient {
     private String name;
     private String surname;
     private Boolean genetic_background;
-    private User user;
+    //private User user;
     private List<MedicalRecord> medicalRecords;
-    private List<Doctor> doctors;
+    //private List<Doctor> doctors;
 
     public Patient() {
     }
@@ -38,20 +38,20 @@ public class Patient {
         this.surname = surname;
         this.genetic_background = genBack;
         this.medicalRecords = new ArrayList<MedicalRecord>();
-        this.doctors = new ArrayList<Doctor>();
+        //this.doctors = new ArrayList<Doctor>();
     }
 
     public void setMedicalRecords(List<MedicalRecord> medicalRecords) {
         this.medicalRecords = medicalRecords;
     }
 
-    public List<Doctor> getDoctors() {
+    /*public List<Doctor> getDoctors() {
         return doctors;
     }
 
     public void setDoctors(List<Doctor> doctors) {
         this.doctors = doctors;
-    }
+    }*/
 
     public String getName() {
         return name;
@@ -69,13 +69,13 @@ public class Patient {
         this.surname = surname;
     }
 
-    public User getUser() {
+    /*public User getUser() {
         return user;
     }
 
     public void setUser(User user) {
         this.user = user;
-    }
+    }*/
 
     public List<MedicalRecord> getMedicalRecords() {
         return medicalRecords;
@@ -93,7 +93,7 @@ public class Patient {
         //"- Treatment: " + treatment;
     }
 
-    private void openRecord() {
+    private void openMedicalRecord() {
         MedicalRecord record = askData();
         record.setPatientName(this.name);
         record.setPatientSurname(this.surname);
@@ -187,7 +187,7 @@ public class Patient {
         return signals;
     }
 
-    //TODO: should we save age, weight and height?
+
     private void saveDataToFile(String patientName, ACC acc, EMG emg) {
         LocalDateTime moment = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
@@ -221,22 +221,24 @@ public class Patient {
         }
     }
 
+    //Data that the patient fills when creating medicalRecord
     private MedicalRecord askData() {
-        Scanner sc = new Scanner(System.in);
-        System.out.println("- Age: ");
-        int age = sc.nextInt();
-        System.out.println("- Weight (kg): ");
-        double weight = sc.nextDouble();
-        System.out.println("- Height (cm): ");
-        int height = sc.nextInt();
-        System.out.println("- Symptoms (enter symptoms separated by commas): ");
-        String symptomsInput = sc.nextLine();
 
-        //Takes the symptoms input and creates a List
-        List<String> symptoms = Arrays.asList(symptomsInput.split(","));
-        symptoms = symptoms.stream().map(String::trim).collect(Collectors.toList()); // Trim extra spaces
-        sc.close();
-        return new MedicalRecord(age, weight, height, symptoms);
+            Scanner sc = new Scanner(System.in);
+            System.out.println("- Age: ");
+            int age = sc.nextInt();
+            System.out.println("- Weight (kg): ");
+            double weight = sc.nextDouble();
+            System.out.println("- Height (cm): ");
+            int height = sc.nextInt();
+            System.out.println("- Symptoms (enter symptoms separated by commas): ");
+            String symptomsInput = sc.nextLine();
+
+            //Takes the symptoms input and creates a List
+            List<String> symptoms = Arrays.asList(symptomsInput.split(","));
+            symptoms = symptoms.stream().map(String::trim).collect(Collectors.toList()); // Trim extra spaces
+            sc.close();
+            return new MedicalRecord(age, weight, height, symptoms);
     }
 
     //choosing Medical Record
@@ -274,59 +276,33 @@ public class Patient {
         return medicalRecords.get(choice-1);
     }
 
-
-    /*public void sendMedicalRecord(MedicalRecord medicalRecord, Socket socket) throws IOException {
-
-        PrintWriter printWriter = new PrintWriter(socket.getOutputStream(), true);
-        System.out.println("Connection established... sending text");
-        printWriter.println(medicalRecord.getPatientName());
-        printWriter.println(medicalRecord.getPatientSurname());
-        printWriter.println(medicalRecord.getAge());//int
-        printWriter.println(medicalRecord.getWeight());//double
-        printWriter.println(medicalRecord.getHeight());//int
-        //symptoms
-        String symptoms = joinWithCommas(medicalRecord.getSymptoms());
-        System.out.println(symptoms);
-        //timestamp
-        String time = joinIntegersWithCommas(medicalRecord.getAcceleration().getTimestamp());
-        printWriter.println(time);
-        //acc
-        String acc = joinIntegersWithCommas(medicalRecord.getAcceleration().getSignalData());
-        printWriter.println(acc);
-        //emg
-        String emg = joinIntegersWithCommas(medicalRecord.getEmg().getSignalData());
-        printWriter.println(emg);
-        printWriter.println(medicalRecord.getGenetic_background());//boolean
-        //releaseSendingResources(printWriter, socket);
-    }*/
-
     public void sendMedicalRecord(MedicalRecord medicalRecord, Socket socket) throws IOException {
-        PrintWriter printWriter = new PrintWriter(socket.getOutputStream(), true);
+            PrintWriter printWriter = new PrintWriter(socket.getOutputStream(), true);
 
-        // Collection of fields into a list
-        List<String> fields = new ArrayList<>();
-        fields.add(medicalRecord.getPatientName());
-        fields.add(medicalRecord.getPatientSurname());
-        fields.add(String.valueOf(medicalRecord.getAge()));
-        fields.add(String.valueOf(medicalRecord.getWeight()));
-        fields.add(String.valueOf(medicalRecord.getHeight()));
+            // Collection of fields into a list
+            List<String> fields = new ArrayList<>();
+            fields.add(medicalRecord.getPatientName());
+            fields.add(medicalRecord.getPatientSurname());
+            fields.add(String.valueOf(medicalRecord.getAge()));
+            fields.add(String.valueOf(medicalRecord.getWeight()));
+            fields.add(String.valueOf(medicalRecord.getHeight()));
 
-        // Add symptoms
-        fields.add(joinWithCommas(medicalRecord.getSymptoms()));
+            // Add symptoms
+            fields.add(joinWithCommas(medicalRecord.getSymptoms()));
 
-        // Add signal data
-        fields.add(joinIntegersWithCommas(medicalRecord.getAcceleration().getTimestamp()));
-        fields.add(joinIntegersWithCommas(medicalRecord.getAcceleration().getSignalData()));
-        fields.add(joinIntegersWithCommas(medicalRecord.getEmg().getSignalData()));
+            // Add signal data
+            fields.add(joinIntegersWithCommas(medicalRecord.getAcceleration().getTimestamp()));
+            fields.add(joinIntegersWithCommas(medicalRecord.getAcceleration().getSignalData()));
+            fields.add(joinIntegersWithCommas(medicalRecord.getEmg().getSignalData()));
 
-        // Add genetic background
-        fields.add(String.valueOf(medicalRecord.getGenetic_background()));
+            // Add genetic background
+            fields.add(String.valueOf(medicalRecord.getGenetic_background()));
 
-        // Serializing and sending the record
-        String recordString = joinWithCommas(fields);
-        printWriter.println(recordString);
+            // Serializing and sending the record
+            String recordString = joinWithCommas(fields);
+            printWriter.println(recordString);
+            System.out.println("Medical record sent successfully: " + recordString);
 
-        System.out.println("Medical record sent successfully: " + recordString);
     }
 
 
@@ -343,7 +319,7 @@ public class Patient {
         //TODO check this one
         DoctorsNote doctorsNote = null;
         try (ServerSocket serverSocket = new ServerSocket(9009)) {  // Puerto 9009 para coincidir con el cliente
-            System.out.println("Server started, waiting for client, waiting for the Doctor Notes...");
+            System.out.println("Server started, waiting for the Doctor Notes...");
 
             try (Socket socket = serverSocket.accept();
                  BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
@@ -395,6 +371,7 @@ public class Patient {
     }
 
     private void seeDoctorNotes(MedicalRecord medicalRecord) {
+
         List<DoctorsNote> notes=medicalRecord.getDoctorsNotes();
 
         if(notes.isEmpty()){
