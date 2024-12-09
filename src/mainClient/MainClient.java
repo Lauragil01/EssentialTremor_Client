@@ -155,37 +155,36 @@ public class MainClient {
             System.out.println("Received response: " + responseServer);
 
             if (responseServer.startsWith("SUCCESS|")) {
-                System.out.println("You are now in the application " + username);
-
+                //System.out.println("You are now in the application " + username);
                 String[] patientData = responseServer.substring(8).split("\\|");
-                if (patientData.length >= 4) { // Ensure enough data exists
-                    String userUsername = patientData[0];
-                    String name = patientData[1];
-                    String surname = patientData[2];
-                    boolean geneticBackground;
-                    try {
-                        geneticBackground = Boolean.parseBoolean(patientData[3]);
-                    } catch (Exception e) {
-                        System.out.println("Error parsing genetic background: " + e.getMessage());
-                        return false;
-                    }
+
+                if (patientData.length >=5) { // Ensure enough data exists
+                    String name = patientData[0];
+                    String surname = patientData[1];
+                    boolean geneticBackground = Boolean.parseBoolean(patientData[2]);
+                    String userUsername = patientData[3];
+                    String hashedPassword = patientData[4];
+
+                    // Initialize patient object
+                    patient = new Patient(name, surname, geneticBackground, new User(username, hashedPassword));
+                    return true;
+
                     //TODO: MIRAR ESTO--> para llamar a openMR()
                     // Initialize patient
-                    patient = new Patient(name, surname, geneticBackground, new User(userUsername, password));
-                    return true;
+                    //patient = new Patient(name, surname, geneticBackground, new User(userUsername, password));
+                    //return true;
+                } else {
+                    System.out.println("Error: Incomplete data received from server.");
+                    return false;
                 }
-            } else if (responseServer.startsWith("ERROR|")) {
-                System.out.println("Login failed: " + responseServer.substring(6));
-                return false;
             } else {
-                System.out.println("Unexpected response from server.");
+                System.out.println("Login failed. " + responseServer);
                 return false;
             }
         } catch (IOException e) {
             System.out.println("Error during login: " + e.getMessage());
             return false;
         }
-        return true;
     }
 
 //TODO: podemos usar metodo .trim() para eliminar espacios y comparar bien las cadenas
@@ -223,6 +222,7 @@ public class MainClient {
 
         if (response.startsWith("SUCCESS")) {
             System.out.println("Registration successful. You can now log in.");
+            patient = new Patient(name, surname, geneticBackground, new User(username, password));
         } else {
             System.out.println("Registration failed: " + response);
         }

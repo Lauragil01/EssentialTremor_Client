@@ -1,1 +1,1 @@
-id,name,surname,genetic_background,doctor_id,state_id,treatment_id,user_id,medical_record_id
+username,password,name,surname,genetic_background
