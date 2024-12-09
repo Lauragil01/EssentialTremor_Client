@@ -26,7 +26,7 @@ public class Patient {
     private String name;
     private String surname;
     private Boolean genetic_background;
-    //private User user;
+    private User user;
     private List<MedicalRecord> medicalRecords;
     //private List<Doctor> doctors;
 
@@ -41,6 +41,12 @@ public class Patient {
         //this.doctors = new ArrayList<Doctor>();
     }
 
+    public Patient (String name, String surname, boolean geneticBackground,  User user){
+        this.name=name;
+        this.surname= surname;
+        this.genetic_background=geneticBackground;
+        this.user=user;
+    }
     public void setMedicalRecords(List<MedicalRecord> medicalRecords) {
         this.medicalRecords = medicalRecords;
     }
@@ -93,15 +99,18 @@ public class Patient {
         //"- Treatment: " + treatment;
     }
 
-    private void openMedicalRecord() {
-        MedicalRecord record=askData();
-        record.setPatientName(this.name);
-        record.setPatientSurname(this.surname);
-        record.setGenetic_background(this.genetic_background);
-        Signals signals = obtainSignals();
-        record.setAcceleration(signals.getAcc());
-        record.setEmg(signals.getEmg());
-        this.getMedicalRecords().add(record);
+    public MedicalRecord openMedicalRecord() {
+
+            //data from patient
+            MedicalRecord record=askData();
+            record.setPatientName(this.name);
+            record.setPatientSurname(this.surname);
+            record.setGenetic_background(this.genetic_background);
+            Signals signals = obtainSignals();
+            record.setAcceleration(signals.getAcc());
+            record.setEmg(signals.getEmg());
+            this.getMedicalRecords().add(record);
+            return record;
     }
 
     //Data that the patient fills when creating medicalRecord
@@ -281,7 +290,7 @@ public class Patient {
     public void sendMedicalRecord(MedicalRecord medicalRecord, Socket socket) throws IOException {
             PrintWriter printWriter = new PrintWriter(socket.getOutputStream(), true);
 
-            // Collection of fields into a list
+            // Collection of fields into a list--> serializing
             List<String> fields = new ArrayList<>();
             fields.add(medicalRecord.getPatientName());
             fields.add(medicalRecord.getPatientSurname());
@@ -293,9 +302,19 @@ public class Patient {
             fields.add(joinWithCommas(medicalRecord.getSymptoms()));
 
             // Add signal data
-            fields.add(joinIntegersWithCommas(medicalRecord.getAcceleration().getTimestamp()));
-            fields.add(joinIntegersWithCommas(medicalRecord.getAcceleration().getSignalData()));
-            fields.add(joinIntegersWithCommas(medicalRecord.getEmg().getSignalData()));
+            if(medicalRecord.getAcceleration()!=null) {
+                fields.add(joinIntegersWithCommas(medicalRecord.getAcceleration().getTimestamp()));
+                fields.add(joinIntegersWithCommas(medicalRecord.getAcceleration().getSignalData()));
+                fields.add(joinIntegersWithCommas(medicalRecord.getEmg().getSignalData()));
+            }else{
+                fields.add("");
+                fields.add("");
+            }
+            if (medicalRecord.getEmg()!=null){
+                fields.add(joinIntegersWithCommas(medicalRecord.getEmg().getSignalData()));
+            }else{
+                fields.add(""); //if there is not data in EMG-->empty field
+            }
 
             // Add genetic background
             fields.add(String.valueOf(medicalRecord.getGenetic_background()));

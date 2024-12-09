@@ -2,6 +2,7 @@ package mainClient;
 
 import pojos.MedicalRecord;
 import pojos.Patient;
+import pojos.User;
 
 import java.io.*;
 import java.net.Socket;
@@ -42,7 +43,7 @@ public class MainClient {
                 }
             }
         } catch (IOException ex) {
-            System.out.println("Error connecting ti the server");
+            System.out.println("Error connecting to the server");
             ex.printStackTrace();
         } finally {
             releaseResourcesClient(inputStream,socket);
@@ -102,7 +103,7 @@ public class MainClient {
                 sc.nextLine(); // Limpiar el buffer
                 switch (loggedInOption) {
                     case 1:
-                        openMedicalRecord();
+                        openMR();
                         break;
                     case 2:
                         sendMedicalRecord();
@@ -144,24 +145,47 @@ public class MainClient {
             String username = sc.nextLine();
             System.out.print("Password: ");
             String password = sc.nextLine();
+
             //sending request to the server
             printWriter.println("LOGIN|" + username + "|" + password);
-            System.out.println("Sent login data "+username+ "|"+password);
+            System.out.println("Sent login data " + username + "|" + password);
+
             //response of the server reading
             String responseServer = bufferedReader.readLine();
-            System.out.println("received response");
+            System.out.println("Received response: " + responseServer);
 
-            if ("SUCCESS".equals(responseServer)) {
-                System.out.println("Login successful. Welcome"+username);
-                return true;
-            } else{
-                System.out.println("Login failed."+ responseServer);
+            if (responseServer.startsWith("SUCCESS|")) {
+                System.out.println("You are now in the application " + username);
+
+                String[] patientData = responseServer.substring(8).split("\\|");
+                if (patientData.length >= 4) { // Ensure enough data exists
+                    String userUsername = patientData[0];
+                    String name = patientData[1];
+                    String surname = patientData[2];
+                    boolean geneticBackground;
+                    try {
+                        geneticBackground = Boolean.parseBoolean(patientData[3]);
+                    } catch (Exception e) {
+                        System.out.println("Error parsing genetic background: " + e.getMessage());
+                        return false;
+                    }
+                    //TODO: MIRAR ESTO--> para llamar a openMR()
+                    // Initialize patient
+                    patient = new Patient(name, surname, geneticBackground, new User(userUsername, password));
+                    return true;
+                }
+            } else if (responseServer.startsWith("ERROR|")) {
+                System.out.println("Login failed: " + responseServer.substring(6));
+                return false;
+            } else {
+                System.out.println("Unexpected response from server.");
                 return false;
             }
-        }catch(IOException e){
-            System.out.println("Error during login "+ e.getMessage());
+        } catch (IOException e) {
+            System.out.println("Error during login: " + e.getMessage());
             return false;
         }
+        return true;
     }
 
 //TODO: podemos usar metodo .trim() para eliminar espacios y comparar bien las cadenas
@@ -197,64 +221,48 @@ public class MainClient {
         String response = bufferedReader.readLine();
         System.out.println("Patient data sent to the server for registration.");
 
-        if ("SUCCESS".equals(response)) {
+        if (response.startsWith("SUCCESS")) {
             System.out.println("Registration successful. You can now log in.");
         } else {
             System.out.println("Registration failed: " + response);
         }
     }
 
-    private static void openMedicalRecord() {
-        // TODO
-        System.out.println("Opening medical record...");
-    }
-    private static void sendMedicalRecord() {
-            System.out.println("Sending Medical Record");
-        try {
-            System.out.println("\n=== Creating Medical Record ===");
-            MedicalRecord medicalRecord = createMedicalRecord();
 
+
+    //TODO: REVISAR!!!!!!!
+    private static void openMR() {
+        System.out.println("Opening medical record...");
+        try {
+            MedicalRecord medicalRecord = patient.openMedicalRecord();
             if (medicalRecord != null) {
-                patient.sendMedicalRecord(medicalRecord, socket);
-                System.out.println("Medical record sent successfully.");
+                System.out.println("Medical Record Created:");
+                System.out.println(medicalRecord); // Asegúrate de que MedicalRecord tiene un método toString() bien definido
             } else {
                 System.out.println("Failed to create medical record.");
             }
-        } catch (IOException e) {
-            System.out.println("Error sending medical record: " + e.getMessage());
+        } catch (Exception e) {
+            System.out.println("Error opening medical record: " + e.getMessage());
         }
     }
 
 
     //TODO : REVISAR!!!! con openMedicalRecord() in Patient class
-    private static MedicalRecord createMedicalRecord() {
+    private static void sendMedicalRecord() {
         try {
-            System.out.println("- Enter Age: ");
-            int age = sc.nextInt();
-            System.out.println("- Enter Weight (kg): ");
-            double weight = sc.nextDouble();
-            System.out.println("- Enter Height (cm): ");
-            int height = sc.nextInt();
-            sc.nextLine(); // Limpiar buffer
-            System.out.println("- Enter Symptoms (comma-separated): ");
-            String symptomsInput = sc.nextLine();
+            System.out.println("\n=== Sending Medical Record ===");
 
-            // Process symptoms input into a list
-            List<String> symptoms = Arrays.asList(symptomsInput.split(","));
-            symptoms = symptoms.stream().map(String::trim).collect(Collectors.toList());
+            // Crear el registro médico utilizando Patient
+            MedicalRecord medicalRecord = patient.openMedicalRecord();
 
-            System.out.println("- Collecting physiological signals...");
-            List<Integer> emgSignal = patient.obtainSignals("EMG");
-            List<Integer> accSignal = patient.obtainSignals("ACC");
-
-            // Create MedicalRecord
-            MedicalRecord medicalRecord = new MedicalRecord(age, weight, height, symptoms, accSignal, emgSignal);
-            System.out.println("Medical record created successfully.");
-            return medicalRecord;
-        } catch (InputMismatchException e) {
-            System.out.println("Invalid input. Please try again.");
-            sc.next(); // Limpiar entrada inválida
-            return null;
+            if (medicalRecord != null) {
+                patient.sendMedicalRecord(medicalRecord, socket);
+                System.out.println("Medical record sent successfully.");
+            } else {
+                System.out.println("Failed to create medical record. Please try again.");
+            }
+        } catch (IOException e) {
+            System.out.println("Error sending medical record: " + e.getMessage());
         }
     }
 
