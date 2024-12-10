@@ -6,13 +6,10 @@ import pojos.User;
 
 import java.io.*;
 import java.net.Socket;
-import java.util.Arrays;
 import java.util.InputMismatchException;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 public class MainClient {
     private static Scanner sc = new Scanner(System.in);
@@ -99,14 +96,14 @@ public class MainClient {
             System.out.print("Select an option: ");
 
             try {
-                int loggedInOption = sc.nextInt();
+                int optionLogIn = sc.nextInt();
                 sc.nextLine(); // Limpiar el buffer
-                switch (loggedInOption) {
+                switch (optionLogIn) {
                     case 1:
                         openMR();
                         break;
                     case 2:
-                        sendMedicalRecord();
+                        sendMR();
                         break;
                     case 0:
                         System.out.println("Logging out...");
@@ -236,8 +233,9 @@ public class MainClient {
         try {
             MedicalRecord medicalRecord = patient.openMedicalRecord();
             if (medicalRecord != null) {
-                System.out.println("Medical Record Created:");
-                System.out.println(medicalRecord); // Asegúrate de que MedicalRecord tiene un método toString() bien definido
+                System.out.println("Medical Record Created...");
+                System.out.println(medicalRecord); //toString() MedicalRecord
+                patient.getMedicalRecords().add(medicalRecord);
             } else {
                 System.out.println("Failed to create medical record.");
             }
@@ -248,18 +246,18 @@ public class MainClient {
 
 
     //TODO : REVISAR!!!! con openMedicalRecord() in Patient class
-    private static void sendMedicalRecord() {
+    private static void sendMR() {
         try {
-            System.out.println("\n=== Sending Medical Record ===");
+            //System.out.println("\n  Sending Medical Record ");
 
             // Crear el registro médico utilizando Patient
-            MedicalRecord medicalRecord = patient.openMedicalRecord();
+            MedicalRecord medicalRecord =patient.chooseMR();
 
             if (medicalRecord != null) {
                 patient.sendMedicalRecord(medicalRecord, socket);
-                System.out.println("Medical record sent successfully.");
+                System.out.println("You have sent the Medical Record to the doctor.");
             } else {
-                System.out.println("Failed to create medical record. Please try again.");
+                System.out.println("Failed there is not  medical records available. Please try again.");
             }
         } catch (IOException e) {
             System.out.println("Error sending medical record: " + e.getMessage());

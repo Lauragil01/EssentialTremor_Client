@@ -28,7 +28,6 @@ public class Patient {
     private Boolean genetic_background;
     private User user;
     private List<MedicalRecord> medicalRecords;
-    //private List<Doctor> doctors;
 
     public Patient() {
     }
@@ -37,8 +36,7 @@ public class Patient {
         this.name = name;
         this.surname = surname;
         this.genetic_background = genBack;
-        this.medicalRecords = new ArrayList<MedicalRecord>();
-        //this.doctors = new ArrayList<Doctor>();
+        this.medicalRecords = new ArrayList<>();
     }
 
     public Patient (String name, String surname, boolean geneticBackground,  User user){
@@ -47,17 +45,7 @@ public class Patient {
         this.genetic_background=geneticBackground;
         this.user=user;
     }
-    public void setMedicalRecords(List<MedicalRecord> medicalRecords) {
-        this.medicalRecords = medicalRecords;
-    }
 
-    /*public List<Doctor> getDoctors() {
-        return doctors;
-    }
-
-    public void setDoctors(List<Doctor> doctors) {
-        this.doctors = doctors;
-    }*/
 
     public String getName() {
         return name;
@@ -74,6 +62,15 @@ public class Patient {
     public void setSurname(String surname) {
         this.surname = surname;
     }
+    public List<MedicalRecord> getMedicalRecords() {
+        if (medicalRecords == null) {
+            medicalRecords = new ArrayList<>(); // Asegura que no sea null
+        }
+        return medicalRecords;
+    }
+    public void setMedicalRecords(List<MedicalRecord> medicalRecords) {
+        this.medicalRecords = medicalRecords;
+    }
 
     /*public User getUser() {
         return user;
@@ -83,13 +80,6 @@ public class Patient {
         this.user = user;
     }*/
 
-    public List<MedicalRecord> getMedicalRecords() {
-        return medicalRecords;
-    }
-
-    public void setMedicalRecord(List<MedicalRecord> medicalRecords) {
-        this.medicalRecords = medicalRecords;
-    }
 
     @Override
     public String toString() {
@@ -119,17 +109,24 @@ public class Patient {
         Scanner sc = new Scanner(System.in);
         System.out.println("- Age: ");
         int age = sc.nextInt();
+        sc.nextLine();//clean buffer
+
         System.out.println("- Weight (kg): ");
         double weight = sc.nextDouble();
+        sc.nextLine();
+
         System.out.println("- Height (cm): ");
         int height = sc.nextInt();
+        sc.nextLine();
+
         System.out.println("- Symptoms (enter symptoms separated by commas): ");
         String symptomsInput = sc.nextLine();
 
         //Takes the symptoms input and creates a List
         List<String> symptoms = Arrays.asList(symptomsInput.split(","));
         symptoms = symptoms.stream().map(String::trim).collect(Collectors.toList()); // Trim extra spaces
-        sc.close();
+
+        //sc.close();//close scanner
         return new MedicalRecord(age, weight, height, symptoms);
     }
 
@@ -146,7 +143,7 @@ public class Patient {
 
             //You need TO CHANGE THE MAC ADDRESS
             //You should have the MAC ADDRESS in a sticker in the Bitalino
-            String macAddress = "20:17:11:20:51:27";
+            String macAddress = "20:16:07:18:17:85";
 
             //Sampling rate, should be 10, 100 or 1000
             int SamplingRate = 100;
@@ -196,8 +193,16 @@ public class Patient {
             /*System.out.println(emg.getTimestamp());
             System.out.println(emg.getSignalData());
             System.out.println(acc.getSignalData());*/
+
+            String filename=saveDataToFile(this.getName(),acc,emg);
+            acc.setFilename(filename);
+            acc.setPath(new File(filename).getAbsolutePath());
+
+            emg.setFilename(filename);
+            emg.setPath(new File(filename).getAbsolutePath());
+
             signals = new Signals(acc, emg);
-            saveDataToFile(this.getName(), acc, emg); //save info in a txt file
+            //saveDataToFile(this.getName(),  acc, emg); //save info in a txt file
 
         } catch (BITalinoException ex) {
             Logger.getLogger(BitalinoDemo.class.getName()).log(Level.SEVERE, null, ex);
@@ -217,7 +222,7 @@ public class Patient {
     }
 
 
-    private void saveDataToFile(String patientName, ACC acc, EMG emg) {
+    private String saveDataToFile(String patientName, ACC acc, EMG emg) {
         LocalDateTime moment = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
         String timestamp = moment.format(formatter);
@@ -248,11 +253,12 @@ public class Patient {
         } catch (IOException e) {
             Logger.getLogger(BitalinoDemo.class.getName()).log(Level.SEVERE, "Error writing file", e);
         }
+        return fileName;
     }
 
 
     //choosing Medical Record
-    private MedicalRecord chooseMR() {
+    public MedicalRecord chooseMR() {
         if (this.medicalRecords.isEmpty()) {
             System.out.println("No medical records available.");
             return null;
@@ -281,7 +287,7 @@ public class Patient {
                 sc.next(); // Clear the invalid input
             }
         }
-        sc.close();
+        //sc.close();
         // Return the selected medical record
         return medicalRecords.get(choice-1);
     }
