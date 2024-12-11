@@ -307,6 +307,9 @@ public class Patient {
             // Add symptoms
             fields.add(joinWithCommas(medicalRecord.getSymptoms()));
 
+            // Add genetic background
+            fields.add(String.valueOf(medicalRecord.getGenetic_background()));
+
             // Add signal data
             if(medicalRecord.getAcceleration()!=null) {
                 fields.add(joinIntegersWithCommas(medicalRecord.getAcceleration().getTimestamp()));
@@ -321,9 +324,6 @@ public class Patient {
             }else{
                 fields.add(""); //if there is not data in EMG-->empty field
             }
-
-            // Add genetic background
-            fields.add(String.valueOf(medicalRecord.getGenetic_background()));
 
             // Serializing and sending the record
             String recordString = joinWithCommas(fields);

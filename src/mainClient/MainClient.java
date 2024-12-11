@@ -235,7 +235,7 @@ public class MainClient {
             if (medicalRecord != null) {
                 System.out.println("Medical Record Created...");
                 System.out.println(medicalRecord); //toString() MedicalRecord
-                patient.getMedicalRecords().add(medicalRecord);
+               // patient.getMedicalRecords().add(medicalRecord);
             } else {
                 System.out.println("Failed to create medical record.");
             }
@@ -245,7 +245,7 @@ public class MainClient {
     }
 
 
-    //TODO : REVISAR!!!! con openMedicalRecord() in Patient class
+
     private static void sendMR() {
         try {
             //System.out.println("\n  Sending Medical Record ");
@@ -253,14 +253,22 @@ public class MainClient {
             // Crear el registro médico utilizando Patient
             MedicalRecord medicalRecord =patient.chooseMR();
 
-            if (medicalRecord != null) {
-                patient.sendMedicalRecord(medicalRecord, socket);
-                System.out.println("You have sent the Medical Record to the doctor.");
+            if (medicalRecord == null) {
+                System.out.println("No medical records available to send.");
+                return;
+            }
+
+            patient.sendMedicalRecord(medicalRecord, socket);
+
+            // Read the server's response
+            String response = bufferedReader.readLine();
+            if (response.startsWith("SUCCESS|")) {
+                System.out.println("Doctor's response: " + response.substring("SUCCESS|".length()));
             } else {
-                System.out.println("Failed there is not  medical records available. Please try again.");
+                System.out.println("Failed to send medical record: " + response);
             }
         } catch (IOException e) {
-            System.out.println("Error sending medical record: " + e.getMessage());
+            System.err.println("Error sending medical record: " + e.getMessage());
         }
     }
 
