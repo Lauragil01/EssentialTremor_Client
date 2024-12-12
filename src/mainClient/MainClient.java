@@ -89,7 +89,7 @@ public class MainClient {
         boolean loggedInControl = true;
         while (loggedInControl) {
             System.out.println("\n================= Logged In Menu =================");
-            System.out.println("1. Open Medical Record");
+            System.out.println("1. Open Medical Record:you will create the MR and record the physiological parameters");
             System.out.println("2. Send Medical Record");
             System.out.println("0. Log Out");
             System.out.println("==================================================");

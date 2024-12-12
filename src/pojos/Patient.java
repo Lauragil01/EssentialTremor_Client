@@ -326,7 +326,7 @@ public class Patient {
             }
 
             // Serializing and sending the record
-            String recordString = joinWithCommas(fields);
+            String recordString = "MEDICAL_RECORD|" +joinWithCommas(fields);
             printWriter.println(recordString);
             System.out.println("Medical record sent successfully: " + recordString);
 

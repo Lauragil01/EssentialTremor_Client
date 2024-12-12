@@ -1,5 +1,0 @@
-id,name,description
-1,STABLE,The patient is stable and under control.
-2,GOOD,The patient is in good health.
-3,BAD,The patient is in bad condition.
-4,CLOSED,"The case is closed, no further action is needed."
