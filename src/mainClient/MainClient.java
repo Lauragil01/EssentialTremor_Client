@@ -5,6 +5,9 @@ import pojos.Patient;
 import pojos.User;
 
 import java.io.*;
+import java.net.DatagramPacket;
+import java.net.InetAddress;
+import java.net.MulticastSocket;
 import java.net.Socket;
 import java.util.InputMismatchException;
 import java.util.*;
@@ -19,33 +22,72 @@ public class MainClient {
     private static InputStream inputStream;
     private static Patient patient;
     private static boolean control=true;
+    private static final int PORT_MULTICAST = 8888;
+    private static final String MULTICAST_GROUP = "230.0.0.0";
 
 
     public static void main(String[] args) {
-        try {
-            socket = new Socket("localhost", 12345);
-            printWriter = new PrintWriter(socket.getOutputStream(), true);
-            bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            inputStream = socket.getInputStream();
 
-            while (control) {
-                showMainMenu();
-                try {
-                    int option = sc.nextInt();
-                    sc.nextLine(); //clean buffer after reading
-                    optionMainMenu(option);
-                } catch (InputMismatchException e) {
-                    System.out.println("Invalid input. Please enter a number.");
-                    sc.next();
+        String serverAddress = findingServer();
+
+        if (serverAddress != null) {
+            System.out.println("Discovered server at: " + serverAddress);
+            String[] parts = serverAddress.split(":");
+            String host = parts[0];
+            int port = Integer.parseInt(parts[1]);
+
+            try {
+
+                socket = new Socket(host, port);
+                printWriter = new PrintWriter(socket.getOutputStream(), true);
+                bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                inputStream = socket.getInputStream();
+
+                while (control) {
+                    showMainMenu();
+                    try {
+                        int option = sc.nextInt();
+                        sc.nextLine(); //clean buffer after reading
+                        optionMainMenu(option);
+                    } catch (InputMismatchException e) {
+                        System.out.println("Invalid input. Please enter a number.");
+                        sc.next();
+                    }
                 }
+
+            } catch (IOException ex) {
+                System.out.println("Error connecting to the server: " + ex.getMessage());
+            } finally {
+                releaseResourcesClient(inputStream, socket);
             }
-        } catch (IOException ex) {
-            System.out.println("Error connecting to the server");
-            ex.printStackTrace();
-        } finally {
-            releaseResourcesClient(inputStream,socket);
+        }else{
+            System.out.println("No server found. ");
         }
     }
+
+    private static String findingServer() {
+        try (MulticastSocket socket = new MulticastSocket(PORT_MULTICAST)) {
+            InetAddress group = InetAddress.getByName(MULTICAST_GROUP);
+            socket.joinGroup(group);
+
+            byte[] buffer = new byte[256];
+            DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+
+            System.out.println("Listening for server announcements...");
+            socket.receive(packet);
+
+            String message = new String(packet.getData(), 0, packet.getLength());
+            if (message.startsWith("SERVER|")) {
+                return message.split("\\|")[1]; // Devuelve "IP:PORT"
+            }
+        } catch (IOException e) {
+            System.err.println("Error discovering server: " + e.getMessage());
+        }
+        return null;
+    }
+
+
+
     private static void showMainMenu(){
         System.out.println("\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
         System.out.println("@@                                                                  @@");
